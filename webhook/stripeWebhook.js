@@ -4,7 +4,7 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const Donation = require('../models/Donation');
 
 // Stripe webhook route
-router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+router.post('/', express.raw({ type: 'application/json' }), async (req, res) => {
   const sig = req.headers['stripe-signature'];
   let event;
 
@@ -22,21 +22,24 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
   // Handle successful payment
   if (event.type === 'payment_intent.succeeded') {
     const pi = event.data.object;
+    const existing = await Donation.findOne({ paymentIntentId: pi.id });
 
-    const donation = new Donation({
-        clubId: pi.metadata.clubId,
-        donorFirstName: pi.metadata.donorFirstName,
-        donorLastName: pi.metadata.donorLastName,
-        donorEmail: pi.metadata.donorEmail,
-        amount: pi.amount / 100,
-        date: new Date(),
-        paymentIntentId: pi.id,
-    });
+    if (!existing) {
+      const donation = new Donation({
+          clubId: pi.metadata.clubId,
+          donorFirstName: pi.metadata.donorFirstName,
+          donorLastName: pi.metadata.donorLastName,
+          donorEmail: pi.metadata.donorEmail,
+          amount: pi.amount / 100,
+          date: new Date(),
+          paymentIntentId: pi.id,
+      });
 
-    try {
-      await donation.save();
-    } catch (err) {
-      console.error('Error saving donation:', err);
+      try {
+        await donation.save();
+      } catch (err) {
+        console.error('Error saving donation:', err);
+      }
     }
   }
 
