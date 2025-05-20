@@ -1,8 +1,20 @@
 const Club = require('../models/Club');
+const sanitizeHtml = require('sanitize-html');
+
+// Function to sanitize inputs
+const sanitizeInput = (input) => {
+  if (typeof input !== 'string') return '';
+  return sanitizeHtml(input, { allowedTags: [], allowedAttributes: {} });
+};
 
 // Create a club
 exports.createClub = async (req, res) => {
-  const { id, name, description } = req.body;
+  let { id, name, description } = req.body;
+
+  id = sanitizeInput(id);
+  name = sanitizeInput(name);
+  description = sanitizeInput(description);
+
   try {
     const existing = await Club.findOne({ id });
     if (existing) return res.status(400).json({ error: 'Club ID already exists' });
