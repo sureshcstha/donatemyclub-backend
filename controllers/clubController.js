@@ -48,3 +48,29 @@ exports.getClubById = async (req, res) => {
     res.status(500).json({ error: 'Database error' });
   }
 };
+
+// Search clubs by name or description
+exports.searchClubs = async (req, res) => {
+  try {
+    let { query } = req.query;  // search query is passed as a query param `?query=...`
+    query = sanitizeInput(query);
+
+    if (!query) {
+      return res.status(400).json({ error: 'Query parameter is required' });
+    }
+
+    // case-insensitive regex search on name and description fields
+    const regex = new RegExp(query, 'i');
+    const clubs = await Club.find({
+      $or: [
+        { name: regex },
+        { description: regex }
+      ]
+    });
+
+    res.json(clubs);
+  } catch (err) {
+    console.error('Error searching clubs:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
+};
