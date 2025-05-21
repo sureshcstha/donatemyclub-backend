@@ -22,7 +22,8 @@ exports.createDonationIntent = async (req, res) => {
   if (!amountRaw || !validator.isFloat(amountRaw.toString(), { gt: 0 })) {
     return res.status(400).json({ error: 'Amount must be a positive number' });
   }
-  const amount = parseFloat(amountRaw);
+  // Limit to 2 decimal places
+  const amount = parseFloat(parseFloat(amountRaw).toFixed(2));
 
   // Validate email format
   if (!donorEmail || !validator.isEmail(donorEmail)) {
@@ -34,7 +35,7 @@ exports.createDonationIntent = async (req, res) => {
 
   try {
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: amount * 100,
+      amount: Math.round(amount * 100), // convert to cents and ensure the result is an integer
       currency: 'usd',
       metadata: {
         clubId,
