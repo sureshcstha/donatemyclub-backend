@@ -74,3 +74,57 @@ exports.searchClubs = async (req, res) => {
     res.status(500).json({ error: 'Database error' });
   }
 };
+
+// Update a club by ID
+exports.updateClub = async (req, res) => {
+  let { id: newId, name, description } = req.body;
+
+  newId = sanitizeInput(newId);
+  name = sanitizeInput(name);
+  description = sanitizeInput(description);
+
+  try {
+    const club = await Club.findOne({ id: req.params.clubId });
+    if (!club) {
+      return res.status(404).json({ error: 'Club not found' });
+    }
+
+    // If the new ID is different, check for uniqueness
+    if (newId && newId !== club.id) {
+      const idExists = await Club.findOne({ id: newId });
+      if (idExists) {
+        return res.status(400).json({ error: 'New Club ID already exists' });
+      }
+      club.id = newId;
+    }
+
+    // Update name and description
+    if (name) club.name = name;
+    if (description) club.description = description;
+
+    await club.save();
+
+    res.json({
+      message: 'Club updated successfully',
+      club
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Delete a club by ID
+exports.deleteClub = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedClub = await Club.findOneAndDelete(id);
+
+    if (!deletedClub) {
+      return res.status(404).json({ error: 'Club not found' });
+    }
+
+    res.json({ message: 'Club deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

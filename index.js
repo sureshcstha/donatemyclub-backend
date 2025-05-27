@@ -18,6 +18,7 @@ app.use(express.json());
 // Routes
 const clubRoutes = require('./routes/clubRoutes');
 const donationRoutes = require('./routes/donationRoutes');
+const apiAuthRoutes = require('./routes/apiAuthRoutes'); 
 
 // Health check
 app.get("/", (req, res) => {
@@ -27,6 +28,7 @@ app.get("/", (req, res) => {
 // API routes
 app.use('/api/clubs', clubRoutes);
 app.use('/api/clubs', donationRoutes);
+app.use("/api/auth", apiAuthRoutes);
 
 // Start server
 const start = async () => {
